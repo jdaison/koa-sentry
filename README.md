@@ -12,7 +12,7 @@ A koa microservice for product management. Features Sentry integration for error
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/grpc-sentry.git
+git clone https://github.com/yourusername/koa-sentry.git
 cd koa-sentry
 ```
 
