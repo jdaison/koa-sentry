@@ -1,3 +1,5 @@
+import Sentry from './instrument';
+
 import * as grpc from "@grpc/grpc-js";
 import * as protoLoader from '@grpc/proto-loader';
 import path from 'path';
@@ -5,7 +7,6 @@ import path from 'path';
 const PROTO_PATH = path.resolve(__dirname, 'product.proto');
 const loadProto = () => {
   try {
-
     const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
       keepCase: true,
       longs: String,
@@ -25,30 +26,49 @@ const loadProto = () => {
     );
     return client;
   } catch (error) {
-    console.log('Error loading proto file:', error);
+    console.error('Error loading proto file:', error);
+    throw error; // Rethrow the error so it's not silently swallowed
   }
 }
 
+
 export const findProducts = () => {
-  const client = loadProto();
-  const metadata = new grpc.Metadata();
-  metadata.add('userId', 'user-123'); // You can replace 'user-123' with actual user id
-
-  try {
-    return new Promise((resolve, reject) => {
-      client.findProducts({}, metadata, (error: any, response: any) => {
-      if (error) {
-        console.error('Error finding products:', error);
-        reject(error);
-        return;
+  return Sentry.startSpan(
+    {
+      name: "findProducts",
+      op: "grpc.request",
+      forceTransaction: true
+    },
+    () => {
+      const client = loadProto();
+      const metadata = new grpc.Metadata();
+      
+      const traceData = Sentry.getTraceData();
+      
+      if (traceData['sentry-trace']) {
+        metadata.add('sentry-trace', traceData['sentry-trace']);
       }
-      resolve(response);
-      });
-    });
+      if (traceData['baggage']) {
+        metadata.add('baggage', traceData['baggage']);
+      }
+      
+      metadata.add('userId', 'user-john-1');
 
-  } catch (error) {
-    console.error('Error loading proto file:', error);
-    console.error('Attempted to load from path:', PROTO_PATH);
-    throw error;
-  }
+      try {
+        return new Promise((resolve, reject) => {
+          client.findProducts({}, metadata, (error: any, response: any) => {
+            if (error) {
+              console.error('Error finding products:', error);
+              reject(error);
+              return;
+            }
+            resolve(response);
+          });
+        });
+      } catch (error) {
+        console.error('Error:', error);
+        throw error;
+      }
+    }
+  );
 };
