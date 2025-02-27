@@ -14,7 +14,7 @@ Use [gRPC project](https://github.com/jdaison/grpc-sentry) to do request to gRPC
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/koa-sentry.git
+git clone https://github.com/jdaison/koa-sentry.git
 cd koa-sentry
 ```
 
