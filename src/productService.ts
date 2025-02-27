@@ -52,7 +52,7 @@ export const findProducts = () => {
         metadata.add('baggage', traceData['baggage']);
       }
       
-      metadata.add('userId', 'user-john-1');
+      metadata.add('userId', 'user-123');
 
       try {
         return new Promise((resolve, reject) => {
@@ -72,3 +72,44 @@ export const findProducts = () => {
     }
   );
 };
+
+export const findProduct = (id: string) => {
+  return Sentry.startSpan(
+    {
+      name: "findProduct",
+      op: "grpc.request",
+      forceTransaction: true
+    },
+    () => {
+      const client = loadProto();
+      const metadata = new grpc.Metadata();
+      
+      const traceData = Sentry.getTraceData();
+      
+      if (traceData['sentry-trace']) {
+        metadata.add('sentry-trace', traceData['sentry-trace']);
+      }
+      if (traceData['baggage']) {
+        metadata.add('baggage', traceData['baggage']);
+      }
+      
+      metadata.add('userId', 'user-user-123');
+
+      try {
+        return new Promise((resolve, reject) => {
+          client.getProduct({ id }, metadata, (error: any, response: any) => {
+            if (error) {
+              console.error('Error finding product:', error);
+              reject(error);
+              return;
+            }
+            resolve(response);
+          });
+        });
+      } catch (error) {
+        console.error('Error:', error);
+        throw error;
+      }
+    }
+  );
+}
